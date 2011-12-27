@@ -86,6 +86,12 @@ class Neurons(object):
     def get(self, *args, **kw):
         return self.mapper.get(self, *args, **kw)
 
+    def normalize(self):
+        MIN = self.data.min() - EPS
+        MAX = self.data.min() + EPS
+        self.data -= MIN
+        self.data /= MAX - MIN
+        
 
 EPS = 0.0001 # small value to avoid zero-division
 def normalize_prob(x):
@@ -98,7 +104,7 @@ class Network(object):
         self.weight = normalize_prob(
             np.ones((src.size, dst.size)))
 
-    def learn(self, alpha=0.1, both=False):
+    def learn(self, alpha=0.1, both=True):
         update = np.outer(self.src.data, self.dst.data)
         self.weight[self.src.data > 0.5] *= 1 - alpha
         self.weight[self.src.data > 0.5] += self.dst.data * alpha
@@ -107,7 +113,7 @@ class Network(object):
             self.weight[self.src.data < 0.5] += (1 - self.dst.data) * alpha
 
     def propagate(self):
-        self.dst.data += self.src.data.dot(self.weight)
+        self.dst.data = self.src.data.dot(self.weight)
 
 
 DATA = """
@@ -152,34 +158,48 @@ input = Neurons(mapper=LEDMapper())
 output = Neurons(mapper=CharMapper("01"))
 net = Network(input, output)
 
-def perceptron():
+def supervised():
     answer = "010101"
     for i in range(100):
         for d, ans in zip(DATA, answer):
             input.set(d)
             output.set(ans)
             net.learn()
-
-    for d, ans in zip(DATA, answer):
-        output.clear()
+ 
+    for d in DATA:
         input.set(d)
         net.propagate()
-        print d, ans, output.get()
+        print d, output.get()
         print
 
 
-def kmeans():
+def unsupervised():
     for i in range(100):
         for d in DATA:
             input.set(d)
             net.propagate()
             output.winner_takes_all()
-            net.learn(both=True)
+            net.learn()
 
     for d in DATA:
-        output.clear()
         input.set(d)
         net.propagate() 
         print d, output.get()
         print
+
+
+def hopfield():
+    global net
+    net = Network(input, input)
+    for i in range(100):
+        for d in DATA:
+            input.set(d)
+            net.learn(both=True)
+
+    input.random()
+    print input.get()
+    print
+    net.propagate()
+    input.normalize()
+    print input.get()
 
