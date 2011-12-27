@@ -34,30 +34,12 @@ class LEDMapper(object):
             if pattern[i] == "+":
                 target.data[i] = 1.0
 
-    def get(self, target):
-        buf = []
-        for i in range(5):
-            for j in range(5):
-                if target.data[i * 5 + j] > 0.5:
-                    c = "+"
-                else:
-                    c = "."
-                buf.append(c)
-            buf.append("\n")
-        return "".join(buf)
 
 class Neurons(object):
-    def __init__(self, size=100, data=None, mapper=None):
-        if mapper:
-            self.mapper = mapper
-            self.size = mapper.size
-        else:
-            self.size = size
-
-        if data:
-            self.data = data
-        else:
-            self.data = np.repeat(0.5, self.size)
+    def __init__(self, mapper):
+        self.mapper = mapper
+        self.size = mapper.size
+        self.data = np.repeat(0.5, self.size)
 
     def find_winner(self):
         return (self.data + np.random.randn(self.size) / 1000).argmax()
@@ -68,34 +50,20 @@ class Neurons(object):
         self.data[i] = 1.0
         return self
 
-    def random(self):
-        self.clear()
-        self.data += np.random.random(self.size)
-        return self
-
     def clear(self):
         self.data *= 0
-
-    def activate(self):
-        self.clear()
-        self.data += 1
 
     def set(self, *args, **kw):
         self.mapper.set(self, *args, **kw)
 
     def get(self, *args, **kw):
         return self.mapper.get(self, *args, **kw)
-
-    def normalize(self):
-        MIN = self.data.min() - EPS
-        MAX = self.data.min() + EPS
-        self.data -= MIN
-        self.data /= MAX - MIN
         
 
 EPS = 0.0001 # small value to avoid zero-division
 def normalize_prob(x):
     return ((x.T + EPS) / (x + EPS).sum(1)).T
+
 
 class Network(object):
     def __init__(self, src, dst):
@@ -106,11 +74,9 @@ class Network(object):
 
     def learn(self, alpha=0.1, both=True):
         update = np.outer(self.src.data, self.dst.data)
-        self.weight[self.src.data > 0.5] *= 1 - alpha
-        self.weight[self.src.data > 0.5] += self.dst.data * alpha
-        if both:
-            self.weight[self.src.data < 0.5] *= 1 - alpha
-            self.weight[self.src.data < 0.5] += (1 - self.dst.data) * alpha
+        self.weight *= 1 - alpha
+        self.weight[self.src.data >= 0.5] += self.dst.data * alpha
+        self.weight[self.src.data < 0.5] += (1 - self.dst.data) * alpha
 
     def propagate(self):
         self.dst.data = self.src.data.dot(self.weight)
@@ -154,11 +120,11 @@ DATA = """
 .+++.
 """.strip().split("\n\n")
 
-input = Neurons(mapper=LEDMapper())
-output = Neurons(mapper=CharMapper("01"))
-net = Network(input, output)
 
 def supervised():
+    input = Neurons(mapper=LEDMapper())
+    output = Neurons(mapper=CharMapper("01"))
+    net = Network(input, output)
     answer = "010101"
     for i in range(100):
         for d, ans in zip(DATA, answer):
@@ -174,6 +140,9 @@ def supervised():
 
 
 def unsupervised():
+    input = Neurons(mapper=LEDMapper())
+    output = Neurons(mapper=CharMapper("01"))
+    net = Network(input, output)
     for i in range(100):
         for d in DATA:
             input.set(d)
@@ -186,20 +155,3 @@ def unsupervised():
         net.propagate() 
         print d, output.get()
         print
-
-
-def hopfield():
-    global net
-    net = Network(input, input)
-    for i in range(100):
-        for d in DATA:
-            input.set(d)
-            net.learn(both=True)
-
-    input.random()
-    print input.get()
-    print
-    net.propagate()
-    input.normalize()
-    print input.get()
-
