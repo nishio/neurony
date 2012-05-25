@@ -6,7 +6,7 @@ class CharMapper(object):
     def __init__(self, chars):
         self.chars = list(chars)
         self.size = len(self.chars)
-        
+
     def to_int(self, c):
         "take a char and return an integer"
         return self.chars.index(c)
@@ -23,7 +23,7 @@ class CharMapper(object):
     def get(self, target):
         i = target.find_winner()
         return self.to_obj(i)
-            
+
 
 class LEDMapper(object):
     size = 25
@@ -58,7 +58,7 @@ class Neurons(object):
 
     def get(self, *args, **kw):
         return self.mapper.get(self, *args, **kw)
-        
+
 
 EPS = 0.0001 # small value to avoid zero-division
 def normalize_prob(x):
@@ -131,7 +131,7 @@ def supervised():
             input.set(d)
             output.set(ans)
             net.learn()
- 
+
     for d in DATA:
         input.set(d)
         net.propagate()
@@ -152,6 +152,6 @@ def unsupervised():
 
     for d in DATA:
         input.set(d)
-        net.propagate() 
+        net.propagate()
         print d, output.get()
         print
