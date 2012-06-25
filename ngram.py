@@ -31,8 +31,7 @@ class NGram(object):
         if len(mc) > 0:
             return mc[0][0]
         # TODO smoothing
-        mc = self.data[tuple(self.backlog)].most_common(1)
-        return mc[0][0]
+        return None
 
 def _test():
     import doctest
