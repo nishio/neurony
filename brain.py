@@ -67,6 +67,7 @@ class Prediction(object):
         self.out_lower = None
         self.in_lower = None
         self.out_upper = None
+        self.in_upper = None
 
     def check(self):
         """
@@ -96,8 +97,18 @@ class Prediction(object):
 
         # predict
         arr = self.syms.sym_to_arr(new_input)
+        # correct signal from upper layer
+        if self.in_upper:
+            (before, after) = self.in_upper
+            before = self.syms.sym_to_int(before)
+            after = self.syms.sym_to_int(after)
+            self.mat[before, after] += 2
+
         p = arr.dot(self.mat)
         predict = self.syms.arr_to_sym(p)
+
+        if self.in_upper:
+            self.mat[before, after] -= 2
 
         self._prev_input = new_input
         self.out_lower = predict
