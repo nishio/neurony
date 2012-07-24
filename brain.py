@@ -59,6 +59,9 @@ class Symbols(object):
 
 
 class Prediction(object):
+    """
+    a model of Cerebral cortex
+    """
     def __init__(self, syms=None):
         if not syms: syms = Symbols()
         self.syms = syms
@@ -68,6 +71,10 @@ class Prediction(object):
         self.in_lower = None
         self.out_upper = None
         self.in_upper = None
+        self.upper_layer = None
+
+    def set_upper_layer(self, upper):
+        self.upper_layer = upper
 
     def check(self):
         """
@@ -81,6 +88,10 @@ class Prediction(object):
 
     def step(self):
         self.check()
+        # upper layer
+        if self.upper_layer:
+            self.in_upper = self.upper_layer.out_lower
+
         prev_predict = self.out_lower
         new_input = self.in_lower
         prev_input = self._prev_input
@@ -112,6 +123,11 @@ class Prediction(object):
 
         self._prev_input = new_input
         self.out_lower = predict
+
+        # propagate to upper layer
+        if self.out_upper and self.upper_layer:
+            self.upper_layer.in_lower = self.out_upper
+            self.upper_layer.step()
 
 
 def main(data="ABCABCBDBDBD", verbose=True):

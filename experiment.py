@@ -16,20 +16,15 @@ def main(data):
     starttime = clock()
     pd1 = brain.Prediction()
     pd2 = brain.Prediction()
+    pd1.set_upper_layer(pd2)
     pd_count = Counter()
     ng = ngram.NGram(3)
     ng_count = Counter()
     for c in data:
         pd_count.update([pd1.out_lower == c])
         ng_count.update([ng.expect() == c])
-
         pd1.in_lower = c
-        pd1.in_upper = pd2.out_lower
         pd1.step()
-        if pd1.out_upper:
-            pd2.in_lower = pd1.out_upper
-            pd2.step()
-
         ng.feed(c)
 
     N = float(len(data))
