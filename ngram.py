@@ -34,9 +34,7 @@ class NGram(object):
         return None
 
     def size(self):
-        return (
-            len(self.data),
-            sum(len(self.data[k]) for k in self.data))
+        return sum(len(self.data[k]) for k in self.data)
 
 def _test():
     import doctest

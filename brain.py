@@ -129,6 +129,12 @@ class Prediction(object):
             self.upper_layer.in_lower = self.out_upper
             self.upper_layer.step()
 
+    def size(self):
+        ret = len(self.mat.nonzero()[0])
+        if self.upper_layer:
+            ret += self.upper_layer.size()
+        return ret
+
 
 def main(data="ABCABCBDBDBD", verbose=True):
     buf = []
