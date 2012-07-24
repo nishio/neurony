@@ -1,22 +1,17 @@
+# -*- coding: utf-8 -*-
 """
-data feeder
+実験2
+タイムマシンデータを1万文字ずつ順に食わせる
+その過程でのメモリ消費量と正解率の変化を観察する
 """
 import ngram
 import brain
 from collections import Counter
 from time import clock
 
-abra = "abracadabra abracadabra abracadabra abracadabra abracadabra"
+timemachine = open("timemachine.txt").read()[:300]
 
-lorem = """Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."""
-
-
-brainpy = open("brain.py").read()
-timemachine = open("timemachine.txt").read()[:10000]
-
-repeat = lorem * 5
-data = ""
-def main(data=data):
+def main(data):
     print "%d characters" % len(data)
     starttime = clock()
     pd1 = brain.Prediction()
@@ -38,19 +33,9 @@ def main(data=data):
         ng.feed(c)
 
     N = float(len(data))
-    print "Brain: %.1f%%" % (100 * pd_count[True] / N), pd_count[True]
-    print "NGram: %.1f%%" % (100 * ng_count[True] / N), ng_count[True]
+    print "Brain(2): %.1f%%" % (100 * pd_count[True] / N), pd_count[True]
+    print "NGram(3): %.1f%%" % (100 * ng_count[True] / N), ng_count[True], ng.size()
     print clock() - starttime, "sec"
     print
 
-print "abracadabra"
-main(abra)
-print "Lorem"
-main(lorem)
-print "brain.py"
-main(brainpy)
-print "Lorem * 5"
-main(repeat)
-print "timemachine"
 main(timemachine)
-
