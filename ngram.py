@@ -33,6 +33,11 @@ class NGram(object):
         # TODO smoothing
         return None
 
+    def size(self):
+        return (
+            len(self.data),
+            sum(len(self.data[k]) for k in self.data))
+
 def _test():
     import doctest
     doctest.testmod()
