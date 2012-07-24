@@ -122,6 +122,7 @@ def main(data="ABCABCBDBDBD", verbose=True):
     for i in range(30):
         for c in data:
             pd1.in_lower = c
+            pd1.in_upper = pd2.out_lower
             pd1.step()
             if pd1.out_upper:
                 pd2.in_lower = pd1.out_upper
