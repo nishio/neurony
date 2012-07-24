@@ -72,6 +72,23 @@ class Prediction(object):
         self.out_upper = None
         self.in_upper = None
         self.upper_layer = None
+        self.num_layer = 1
+
+    @staticmethod
+    def init_multi_leyer(num):
+        top = ret = Prediction()
+        ret.num_layer = num
+        num -= 1
+        while num > 0:
+            new_top = Prediction()
+            top.set_upper_layer(new_top)
+            top = new_top
+            num -= 1
+
+        return ret
+
+    def __str__(self):
+        return "Brain(%s)" % self.num_layer
 
     def set_upper_layer(self, upper):
         self.upper_layer = upper
