@@ -4,32 +4,13 @@
 階層的ニューラルネットワークを作ってみる
 """
 import numpy as np
-from collections import Counter
+from collections import Counter, defaultdict
 
 # Compression
 
 # (not implemented)
 
 # Prediction
-
-def enlarge(mat):
-    """
-    widen matrix
-    >>> x = np.array([[1, 2], [3, 4]])
-    >>> x
-    array([[1, 2],
-           [3, 4]])
-    >>> enlarge(x)
-    array([[ 1.,  2.,  0.],
-           [ 3.,  4.,  0.],
-           [ 0.,  0.,  1.]])
-    """
-    N, M = mat.shape
-    result = np.zeros((N + 1, M + 1))
-    result[0:N, 0:M] = mat
-    result[N, M] = 1
-    return result
-
 
 # Mapper
 class Symbols(object):
@@ -56,7 +37,10 @@ class Symbols(object):
         self.symbols.append(sym)
         self.size += 1
 
-
+class Eye(defaultdict):
+    def __missing__(self, key):
+        self[key] = Counter([key])
+        return self[key]
 
 class Prediction(object):
     """
@@ -65,7 +49,7 @@ class Prediction(object):
     def __init__(self, syms=None):
         if not syms: syms = Symbols()
         self.syms = syms
-        self.mat = np.eye(syms.size)
+        self.data = Eye()
         self._prev_input = None
         self.out_lower = None
         self.in_lower = None
@@ -93,18 +77,7 @@ class Prediction(object):
     def set_upper_layer(self, upper):
         self.upper_layer = upper
 
-    def check(self):
-        """
-        check if new input is in self.syms.symbols.
-        If not, enlarge symbols and matrix.
-        """
-        s = self.in_lower
-        if s not in self.syms.symbols:
-            self.syms.add_a_symbol(s)
-            self.mat = enlarge(self.mat)
-
     def step(self):
-        self.check()
         # upper layer
         if self.upper_layer:
             self.in_upper = self.upper_layer.out_lower
@@ -117,26 +90,22 @@ class Prediction(object):
             # when prediction failed
             self.out_upper = (prev_input, new_input)
             # learn
-            i = self.syms.sym_to_int(prev_input)
-            j = self.syms.sym_to_int(new_input)
-            self.mat[i, j] += 1 # just count up
+            self.data[prev_input].update([new_input])
         else:
             self.out_upper = None
 
         # predict
-        arr = self.syms.sym_to_arr(new_input)
         # correct signal from upper layer
+        to_decrement = False
         if self.in_upper:
             (before, after) = self.in_upper
-            before = self.syms.sym_to_int(before)
-            after = self.syms.sym_to_int(after)
-            self.mat[before, after] += 2
+            self.data[before].update({after: 2})
 
-        p = arr.dot(self.mat)
-        predict = self.syms.arr_to_sym(p)
+        predict, _count = self.data[new_input].most_common(1)[0]
 
         if self.in_upper:
-            self.mat[before, after] -= 2
+            self.data[before].update({after: -2})
+
 
         self._prev_input = new_input
         self.out_lower = predict
@@ -147,7 +116,7 @@ class Prediction(object):
             self.upper_layer.step()
 
     def size(self):
-        ret = len(self.mat.nonzero()[0])
+        ret = sum(len(self.data[k]) for k in self.data)
         if self.upper_layer:
             ret += self.upper_layer.size()
         return ret
