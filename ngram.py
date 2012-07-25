@@ -13,7 +13,7 @@ class NGram(object):
     def __init__(self, n):
         self.n = n
         self.data = defaultdict(Counter)
-        self.backlog = deque(["BOS"] * n)
+        self.backlog = deque(["BOS"] * (n - 1))
         self.freq_counter = Counter()
 
     def feed(self, c):
