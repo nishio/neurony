@@ -9,11 +9,12 @@ import brain
 from collections import Counter
 from time import clock
 
+pd1 = brain.Prediction.init_multi_leyer(1)
 pd2 = brain.Prediction.init_multi_leyer(2)
 pd3 = brain.Prediction.init_multi_leyer(3)
 pd4 = brain.Prediction.init_multi_leyer(4)
-pds = [pd2, pd3, pd4]
-ng = ngram.NGram(3)
+pds = [pd1, pd2, pd3, pd4]
+ng = ngram.NGram(2)
 
 def iteration(data):
     print "%d characters" % len(data)
@@ -33,16 +34,28 @@ def iteration(data):
         ng.feed(c)
 
     N = float(len(data))
+    line = []
     for pd in pds:
+        correct = 100 * pd.count[True] / N
+        size = pd.size()
         print "%s: correct %.1f%% mem %d" % (
-            pd, (100 * pd.count[True] / N), pd.size())
+            pd, correct, size)
+        line.append(correct)
+        line.append(size)
 
-    print "NGram(3): correct %.1f%% mem %d" % ((100 * ng_count[True] / N), ng.size())
+    correct = 100 * ng_count[True] / N
+    size = ng.size()
+    print "NGram(3): correct %.1f%% mem %d" % (correct, size)
+    line.append(correct)
+    line.append(size)
     print clock() - starttime, "sec"
     print
-
+    buf.append(line)
 
 timemachine = open("timemachine.txt")
-for i in range(5):
-    data = timemachine.read(100)
+buf = []
+for i in range(20):
+    data = timemachine.read(10000)
     iteration(data)
+
+print "\n".join(",".join(map(str, line)) for line in buf)
